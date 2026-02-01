@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+!/usr/bin/env bash
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -7,6 +7,8 @@ EXTRA_COMPOSE_FILE="$ROOT_DIR/docker-compose.extra.yml"
 IMAGE_NAME="${OPENCLAW_IMAGE:-openclaw:local}"
 EXTRA_MOUNTS="${OPENCLAW_EXTRA_MOUNTS:-}"
 HOME_VOLUME_NAME="${OPENCLAW_HOME_VOLUME:-}"
+NODE_UID="${NODE_UID:-}"
+NODE_GID="${NODE_GID:-}"
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -171,11 +173,26 @@ upsert_env "$ENV_FILE" \
   OPENCLAW_DOCKER_APT_PACKAGES
 
 echo "==> Building Docker image: $IMAGE_NAME"
+BUILD_ARGS=(
+    --build-arg
+    "OPENCLAW_DOCKER_APT_PACKAGES=${OPENCLAW_DOCKER_APT_PACKAGES}"
+)
+
+# Only add UID/GID args if explicitly provided
+if [[ -n "$NODE_UID" ]]; then
+    BUILD_ARGS+=(--build-arg "NODE_UID=${NODE_UID}")
+    echo "    node user UID: ${NODE_UID}"
+fi
+if [[ -n "$NODE_GID" ]]; then
+    BUILD_ARGS+=(--build-arg "NODE_GID=${NODE_GID}")
+    echo "    node user GID: ${NODE_GID}"
+fi
+
 docker build \
-  --build-arg "OPENCLAW_DOCKER_APT_PACKAGES=${OPENCLAW_DOCKER_APT_PACKAGES}" \
-  -t "$IMAGE_NAME" \
-  -f "$ROOT_DIR/Dockerfile" \
-  "$ROOT_DIR"
+       "${BUILD_ARGS[@]}" \
+       -t "$IMAGE_NAME" \
+       -f "$ROOT_DIR/Dockerfile" \
+       "$ROOT_DIR"
 
 echo ""
 echo "==> Onboarding (interactive)"

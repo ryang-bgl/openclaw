@@ -31,6 +31,17 @@ RUN pnpm ui:build
 
 ENV NODE_ENV=production
 
+# ===================================================================
+# Override UID/GID of the existing 'node' user
+# Defaults to 1000:1000 (standard node user)
+# ===================================================================
+ARG NODE_UID=1000
+ARG NODE_GID=1000
+
+# Modify the existing node user's UID/GID
+RUN groupmod -o -g ${NODE_GID} node && \
+    usermod -o -u ${NODE_UID} -g ${NODE_GID} node
+
 # Security hardening: Run as non-root user
 # The node:22-bookworm image includes a 'node' user (uid 1000)
 # This reduces the attack surface by preventing container escape via root privileges
