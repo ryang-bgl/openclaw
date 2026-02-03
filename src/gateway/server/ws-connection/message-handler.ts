@@ -575,6 +575,12 @@ export function attachGatewayWsMessageHandler(params: {
           req: upgradeReq,
           trustedProxies,
         });
+        // Log token check for debugging
+        if (resolvedAuth.mode === "token" && resolvedAuth.token) {
+          logGateway.info(
+            `token_check: gateway.auth.token=${resolvedAuth.token} clientToken=${connectParams.auth?.token ?? "(missing)"}`,
+          );
+        }
         let authOk = authResult.ok;
         let authMethod =
           authResult.method ?? (resolvedAuth.mode === "password" ? "password" : "token");
