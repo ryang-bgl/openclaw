@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { logInfo } from "../logger.js";
 import { resolveStateDir } from "../config/paths.js";
 
 export type DevicePairingPendingRequest = {
@@ -431,6 +432,7 @@ export async function verifyDeviceToken(params: {
     if (entry.revokedAtMs) {
       return { ok: false, reason: "token-revoked" };
     }
+    logInfo(`verifyDeviceToken: deviceId=${params.deviceId} role=${role} entry.token=${entry.token} params.token=${params.token}`);
     if (entry.token !== params.token) {
       return { ok: false, reason: "token-mismatch" };
     }
